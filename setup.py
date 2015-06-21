@@ -13,6 +13,9 @@ setup(
     author_email='jeremyalucas@gmail.com',
     url='https://github.com/jerluc/envy',
     packages=['envy'],
+    entry_points={
+        'console_scripts': ['envy=envy.__main__:main'],
+    },
     install_requires=[l.strip() for l in open('requirements.txt')],
     license='License :: OSI Approved :: Apache Software License',
 )
