@@ -7,11 +7,13 @@ import sys
 
 
 @click.command()
+@click.option('-e', '--enter', is_flag=True,
+              help='Enter the workspace after intializing')
 @click.option('-r', '--recreate', is_flag=True,
-              help='Re-initialize the environment')
+              help='Re-initialize the workspace')
 @click.pass_context
-def init(ctx, recreate):
-    sys.exit(commands.init(ctx.obj['basedir'], recreate))
+def init(ctx, enter, recreate):
+    sys.exit(commands.init(ctx.obj['basedir'], enter, recreate))
 
 
 @click.command()
@@ -22,7 +24,7 @@ def enter(ctx):
 
 @click.command()
 @click.option('-f', '--force', is_flag=True,
-              help='Force destroy the environment')
+              help='Force destroy the workspace')
 @click.pass_context
 def destroy(ctx, force):
     sys.exit(commands.destroy(ctx.obj['basedir'], force))

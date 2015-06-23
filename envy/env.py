@@ -4,6 +4,7 @@ import envy.static as static
 import os
 import os.path
 import shutil
+import stat
 
 
 config = collections.namedtuple('config', 
@@ -45,6 +46,7 @@ def find_envy_dir(basedir, autocreate):
     ensure_envy_dir(root_dir, autocreate)
     ensure_envy_dir(os.path.join(root_dir, 'bin'), autocreate)
     ensure_envy_dir(os.path.join(root_dir, 'logs'), autocreate)
+    ensure_envy_dir(os.path.join(root_dir, 'macros'), autocreate)
     ensure_envy_dir(os.path.join(root_dir, 'plugins'), autocreate)
 
     return root_dir
@@ -57,12 +59,31 @@ def load_system_config():
     return config(location=root_dir, plugins=[])
 
 
+def p(*parts):
+    return os.path.join(*parts)
+
+
+def create_file(fn, contents):
+    with open(fn, 'w') as f:
+        f.write(contents)
+
+
+def create_executable(fn, contents):
+    create_file(fn, contents)
+    st = os.stat(fn)
+    os.chmod(fn, st.st_mode | stat.S_IEXEC)
+
+
 def load_config(basedir, autocreate):
     log.debug('Loading envy configuration')
     root_dir = find_envy_dir(basedir, autocreate=autocreate)
 
-    with open(os.path.join(root_dir, 'init'), 'w') as f:
-        f.write(static.__ACTIVATOR)
+    # TODO: Don't recreate each time?
+    create_executable(p(root_dir, 'bin', 'init'), static.__ACTIVATOR)
+    create_file(p(root_dir, 'todos.md'), static.__TODOS_MD)
+    create_executable(p(root_dir, 'bin', 'todos'), static.__TODOS)
+    create_executable(p(root_dir, 'bin', 'record'), static.__RECORDING)
+    create_executable(p(root_dir, 'bin', 'recording_sub'), static.__RECORDING_SUB)
 
     return config(location=root_dir, plugins=[])
 
