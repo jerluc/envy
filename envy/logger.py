@@ -24,7 +24,7 @@ ENVY_LOGGING = {
             'handlers': ['file'],
             # TODO: Allow DEBUG level once file-based logging
             # is implemented
-            'level': 'INFO',
+            'level': 'CRITICAL',
         }
     }
 }
