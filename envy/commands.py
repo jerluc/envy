@@ -44,7 +44,7 @@ def enter(basedir):
     shell_env['ENVY_DIR'] = env.config.location
     shell_env['ENVY_SYS_DIR'] = env.system_config.location
     shell_env['ENVY_PROMPT'] = '%s ⚡ ' % click.style(env.name, fg='cyan', bold=True)
-    init_file = os.path.join(env.config.location, 'bin', 'init')
+    init_file = os.path.join(env.config.location, '.activator')
     return subprocess.call([os.environ['SHELL'], '--init-file', init_file], env=shell_env)
 
 

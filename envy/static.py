@@ -5,6 +5,15 @@ __ACTIVATOR = '''#!/bin/bash
 export HISTFILE=$ENVY_DIR/history
 export PATH=$ENVY_DIR/macros:$ENVY_DIR/bin:$PATH
 export PS1="${ENVY_PROMPT}${PS1}"
+
+if [ -f $ENVY_DIR/.init ]; then
+    source $ENVY_DIR/.init
+fi
+'''
+
+__INIT = '''#!/bin/bash
+# You can add any custom initialization stuff here!
+
 '''
 
 

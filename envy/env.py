@@ -47,7 +47,6 @@ def find_envy_dir(basedir, autocreate):
 
     ensure_envy_dir(root_dir, autocreate)
     ensure_envy_dir(os.path.join(root_dir, 'bin'), autocreate)
-    ensure_envy_dir(os.path.join(root_dir, 'logs'), autocreate)
     ensure_envy_dir(os.path.join(root_dir, 'macros'), autocreate)
     ensure_envy_dir(os.path.join(root_dir, 'plugins'), autocreate)
 
@@ -81,7 +80,8 @@ def load_config(basedir, autocreate):
     root_dir = find_envy_dir(basedir, autocreate=autocreate)
 
     # TODO: Don't recreate each time?
-    create_executable(p(root_dir, 'bin', 'init'), static.__ACTIVATOR)
+    create_executable(p(root_dir, '.activator'), static.__ACTIVATOR)
+    create_executable(p(root_dir, '.init'), static.__INIT)
     create_file(p(root_dir, 'todos.md'), static.__TODOS_MD)
     create_executable(p(root_dir, 'bin', 'todos'), static.__TODOS)
     create_executable(p(root_dir, 'bin', 'record'), static.__RECORDING)
