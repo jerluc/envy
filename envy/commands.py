@@ -26,6 +26,10 @@ def init(basedir, recreate):
 
 
 def enter(basedir):
+    if 'ENVY' in os.environ:
+        print(click.style('Cannot enter a workspace while another workspace is already active', fg='red'))
+        return 1
+
     try:
         env = Environment(basedir)
         env.init(autocreate=False)
