@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import collections
 import envy.logger as log
 import envy.static as static
@@ -28,7 +30,7 @@ def ensure_envy_dir(path, autocreate):
             os.makedirs(path)
         else:
             err = 'No envy directory exists at path [%s]. ' % path \
-                + 'Try initializing one first with "envy init"'
+                + 'Try initializing one first with "nv i"'
             log.error(err)
             raise ConfigurationException(err)
 

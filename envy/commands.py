@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 
-def init(basedir, enter_after, recreate):
+def init(basedir, recreate):
     env = Environment(basedir)
 
     if recreate:
@@ -21,9 +21,6 @@ def init(basedir, enter_after, recreate):
     print(click.style('Initializing workspace [%s]' % env.name, fg='cyan'))
 
     env.init(autocreate=True)
-
-    if enter_after:
-        enter(basedir)
 
     return 0
 
