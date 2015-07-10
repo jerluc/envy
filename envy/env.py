@@ -30,7 +30,7 @@ def ensure_envy_dir(path, autocreate):
             os.makedirs(path)
         else:
             err = 'No envy directory exists at path [%s]. ' % path \
-                + 'Try initializing one first with "nv i"'
+                + 'Try creating one first with "nv c"'
             log.error(err)
             raise ConfigurationException(err)
 

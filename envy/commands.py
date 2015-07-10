@@ -8,17 +8,17 @@ import os
 import subprocess
 import sys
 
-def init(basedir, recreate):
+def create(basedir, recreate):
     env = Environment(basedir)
 
     if recreate:
-        confirmation = click.style('Are you sure you want to re-initialize this workspace? This will delete any pre-existing workspace!', fg='red')
+        confirmation = click.style('Are you sure you want to re-create this workspace? This will delete any pre-existing workspace!', fg='red')
         if click.confirm(confirmation):
             env.destroy()
         else:
             return 1
 
-    print(click.style('Initializing workspace [%s]' % env.name, fg='cyan'))
+    print(click.style('Creating workspace [%s]' % env.name, fg='cyan'))
 
     env.init(autocreate=True)
 

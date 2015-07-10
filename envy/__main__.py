@@ -22,12 +22,12 @@ def cli():
     pass
 
 
-@cli.command('i')
+@cli.command('c')
 @click.option('-r', '--recreate', is_flag=True,
-              help='Re-initialize the workspace')
-def init(recreate):
-    """Initializes a new workspace"""
-    _maybe_exit(commands.init(CWD, recreate))
+              help='Re-create the workspace')
+def create(recreate):
+    """Creates a new workspace"""
+    _maybe_exit(commands.create(CWD, recreate))
 
 
 @cli.command('e')
