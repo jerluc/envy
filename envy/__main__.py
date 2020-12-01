@@ -1,48 +1,25 @@
-# -*- coding: utf-8 -*-
-
 import click
-import collections
-import blessed
-import envy.commands as commands
-import os.path
-import sys
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-CWD = os.path.abspath(os.getcwd())
+from envy import __version__, env as nvenv
 
-
-def _maybe_exit(exit_code):
-    if exit_code > 0:
-        sys.exit(exit_code)
-
-
-@click.group(chain=True, context_settings=CONTEXT_SETTINGS)
-@click.version_option(version='0.1.0-alpha', prog_name='envy')
-def cli():
-    pass
-
-
-@cli.command('c')
-@click.option('-r', '--recreate', is_flag=True,
-              help='Re-create the workspace')
-def create(recreate):
-    """Creates a new workspace"""
-    _maybe_exit(commands.create(CWD, recreate))
-
-
-@cli.command('e')
-def enter():
-    """Enters the current workspace"""
-    _maybe_exit(commands.enter(CWD))
-
-
-@cli.command('d')
-@click.option('-f', '--force', is_flag=True,
-              help='Force destroy the workspace')
-def destroy(force):
-    """Destroys the current workspace"""
-    _maybe_exit(commands.destroy(CWD, force))
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
 def main():
+    @click.group(chain=True, context_settings=CONTEXT_SETTINGS)
+    @click.version_option(version=__version__, prog_name="envy")
+    def cli():
+        pass
+
+    env = nvenv.load()
+
+    def add_macro_cli(macro: str):
+        @cli.command(macro)
+        def macro_command():
+            print(f"Running macro: {macro}")
+            env.run(macro)
+
+    for macro in env.macros.keys():
+        add_macro_cli(macro)
+
     cli()

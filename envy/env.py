@@ -1,113 +1,82 @@
-# -*- coding: utf-8 -*-
-
-import collections
-import envy.logger as log
-import envy.static as static
 import os
 import os.path
-import shutil
-import stat
+import pathlib
+import shlex
+import subprocess
+import typing
+import yaml
+
+from pydantic import BaseModel, BaseSettings, FilePath, PyObject
+
+from .macro.cmd import CommandRunner
 
 
-config = collections.namedtuple('config', 
-    ['location', 'plugins'])
+CONFIG_FILE_NAME = ".envy.yml"
+
+Vars = typing.Mapping[str, str]
+VarsOrEnvFile = typing.Union[FilePath, Vars]
+MacroType = typing.Union[FilePath, PyObject, str]
+Macros = typing.Mapping[str, MacroType]
 
 
-class ConfigurationException(Exception):
-    pass
+class Environment(BaseModel):
+    vars: Vars
+    macros: Macros
+
+    def extend(self, other: "Environment") -> "Environment":
+        return Environment(
+            vars={**other.vars, **self.vars}, macros={**other.macros, **self.macros}
+        )
+
+    def run(self, macro: str) -> int:
+        if macro not in self.macros:
+            raise KeyError(f"Undefined macro: '{macro}'")
+        return self.macros[macro]()
 
 
-# TODO: Create catchable exceptions for these failures
-def ensure_envy_dir(path, autocreate):
-    if os.path.isfile(path):
-        err = 'Directory [%s] is actually a file!' % path
-        log.error(err)
-        raise ConfigurationException(err)
-
-    if not os.path.exists(path):
-        if autocreate:
-            log.warning('Directory [%s] does not exist, creating it now' % path)
-            os.makedirs(path)
-        else:
-            err = 'No envy directory exists at path [%s]. ' % path \
-                + 'Try creating one first with "nv c"'
-            log.error(err)
-            raise ConfigurationException(err)
-
-    return path
+def _pyobj_runner(pyobj: PyObject) -> typing.Callable[[], int]:
+    def runner() -> int:
+        assert callable(pyobj)
+        pyobj()
+        return 0
 
 
-def delete_envy_dir(basedir):
-    root_dir = os.path.join(basedir, '.envy')
-    shutil.rmtree(root_dir)
+class EnvyConfig(BaseSettings):
+    vars: typing.Optional[VarsOrEnvFile] = {}
+    macros: typing.Optional[Macros] = {}
+
+    def to_environment(self) -> Environment:
+        vars: Vars = {}
+        if isinstance(self.vars, dict):
+            vars = self.vars
+        elif isinstance(self.vars, FilePath):
+            pass
+
+        macros: Macros = {}
+        for name, mfn in self.macros.items():
+            if callable(mfn):
+                macros[name] = mfn
+            elif isinstance(mfn, pathlib.Path):
+                # TODO: Should the path be relative to the environment file location?
+                macros[name] = CommandRunner(str(mfn)).run
+            else:
+                macros[name] = CommandRunner(mfn).run
+
+        return Environment(vars=vars, macros=macros)
 
 
-def find_envy_dir(basedir, autocreate):
-    root_dir = os.path.join(basedir, '.envy')
-
-    ensure_envy_dir(root_dir, autocreate)
-    ensure_envy_dir(os.path.join(root_dir, 'bin'), autocreate)
-    ensure_envy_dir(os.path.join(root_dir, 'macros'), autocreate)
-    ensure_envy_dir(os.path.join(root_dir, 'plugins'), autocreate)
-
-    return root_dir
+def load_env(config_file_path: str) -> Environment:
+    with open(config_file_path) as config_file:
+        raw_config = yaml.load(config_file, yaml.SafeLoader) or {}
+        return EnvyConfig.parse_obj(raw_config).to_environment()
 
 
-def load_system_config():
-    log.debug('Loading system-level envy configuration')
-    root_dir = find_envy_dir(os.environ['HOME'], autocreate=True)
-
-    return config(location=root_dir, plugins=[])
-
-
-def p(*parts):
-    return os.path.join(*parts)
-
-
-def create_file(fn, contents):
-    with open(fn, 'w') as f:
-        f.write(contents)
-
-
-def create_executable(fn, contents):
-    create_file(fn, contents)
-    st = os.stat(fn)
-    os.chmod(fn, st.st_mode | stat.S_IEXEC)
-
-
-def load_config(basedir, autocreate):
-    log.debug('Loading envy configuration')
-    root_dir = find_envy_dir(basedir, autocreate=autocreate)
-
-    # TODO: Don't recreate each time?
-    create_executable(p(root_dir, '.activator'), static.__ACTIVATOR)
-    create_executable(p(root_dir, '.init'), static.__INIT)
-    create_file(p(root_dir, 'todos.md'), static.__TODOS_MD)
-    create_executable(p(root_dir, 'bin', 'todos'), static.__TODOS)
-    create_executable(p(root_dir, 'bin', 'record'), static.__RECORDING)
-    create_executable(p(root_dir, 'bin', 'recording_sub'), static.__RECORDING_SUB)
-
-    return config(location=root_dir, plugins=[])
-
-
-class Environment(object):
-    def __init__(self, basedir):
-        self.basedir = basedir
-        self.name = os.path.basename(self.basedir)
-
-
-    # TODO: Break out into separate `create`, `check`, and `load` methods
-    def init(self, autocreate=False):
-        self.system_config = load_system_config()
-        self.config = load_config(self.basedir, autocreate)
-
-
-    def destroy(self):
-        delete_envy_dir(self.basedir)
-
-
-    @property
-    def extra_path(self):
-        config_locations = [self.config.location, self.system_config.location]
-        dirs = [os.path.join(p, 'bin') for p in config_locations]
-        return ':'.join(dirs)
+def load() -> Environment:
+    cwd = pathlib.Path(os.path.abspath(os.getcwd()))
+    env = Environment(vars={}, macros={})
+    search_dirs = list(cwd.parents)[::-1] + [cwd]
+    for dir in search_dirs:
+        config_file_path = os.path.join(dir, CONFIG_FILE_NAME)
+        if os.path.exists(config_file_path):
+            env = env.extend(load_env(config_file_path))
+    return env
