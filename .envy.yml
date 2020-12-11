@@ -1,9 +1,0 @@
-macros:
-  localtest: echo "CWD config"
-  outerrtest: >
-    /bin/bash -c 'echo "STDOUT"; echo "STDERR" 1>&2'
-  inputtest: >
-    /bin/bash -c 'read -p "What do you think?: " yn; echo "You think: $yn"'
-  sleeptest: >
-    /bin/bash -c 'echo "Hello..."; sleep 4; echo "...there!"'
-  db: docker run -it --rm -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust postgres

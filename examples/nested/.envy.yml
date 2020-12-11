@@ -1,0 +1,5 @@
+vars:
+  somevar: OUTER
+macros:
+  outertest: echo "outerrtest (parent directory)"
+  innertest: echo "innertest (parent directory)"

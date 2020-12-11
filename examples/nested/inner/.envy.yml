@@ -1,0 +1,4 @@
+vars:
+  somevar: INNER
+macros:
+  innertest: echo "innertest (inner directory)"

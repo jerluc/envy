@@ -1,0 +1,10 @@
+vars:
+  api-token: "ABC123"
+macros:
+  bintest: /bin/uptime
+  shelltest: >
+    echo "Your username is: $USER"
+  iotest: >
+    echo "STDOUT"; echo "STDERR" 1>&2
+  dbtest: >
+    docker run -it --rm -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust postgres
