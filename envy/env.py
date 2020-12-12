@@ -43,11 +43,17 @@ class Environment:
             macros += self._parent.macros
         return set(macros)
 
-    def extend(self, other: "Environment") -> "Environment":
-        self._parent = other
+    def extend(self, parent: "Environment") -> "Environment":
+        """
+        Links this environment to its parent
+        """
+        self._parent = parent
         return self
 
     def getvar(self, variable_name: str) -> str:
+        """
+        Retrieves a variable by name
+        """
         if variable_name not in self._vars:
             if self._parent is not None:
                 return self._parent.getvar(variable_name)
@@ -55,6 +61,9 @@ class Environment:
         return self._vars[variable_name]
 
     def run(self, macro: str) -> int:
+        """
+        Runs a macro by name
+        """
         if macro not in self._macros:
             if self._parent is not None:
                 return self._parent.run(macro)
